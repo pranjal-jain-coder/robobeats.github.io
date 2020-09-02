@@ -141,9 +141,9 @@
         function startGame() {
             var c = document.getElementById("myCanvas");
             var ctx = c.getContext("2d");
-            screen.lockOrientation("portrait-primary");
-            screen.lockOrientation("portrait-secondary");
-            screen.lockOrientation("landscape-secondary");
+            screen.orientation.lock("portrait-primary");
+            screen.orientation.lock("portrait-secondary");
+            screen.orientation.lock("landscape-secondary");
             c.width = window.innerWidth - 30;
             c.height = window.innerHeight - 30;
             canvasWidth = c.width;
@@ -188,16 +188,13 @@
                         var obs = new Obstacle(canvasWidth, Math.random() * canvasHeight - 200, "images/asteroid3.png");
                     }
                     obstacle.push(obs);
-                    newObsCoun = Math.random() * newObsSpeed + 100;
-                    if (newObsSpeed > 150) {
-                        newObsSpeed -= 2;
-                    }
+                    newObsCoun = Math.random() * newObsSpeed + 50;
 
                 }
                 for (var i = 0; i < obstacle.length; i++) {
                     obstacle[i].draw(ctx);
                 }
-                newObsCoun -= 1;
+                newObsCoun -= 3;
 
                 document.onkeydown = checkKey;
                 document.ontouchstart = touchStart;
