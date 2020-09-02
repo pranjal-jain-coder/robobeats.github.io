@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html>
+    <p> Use arrow keys and spacebar on laptop. Use swipe and tap on phone/tablet.</p>
+    <head>
+        <script>
+            //Global var
+            var gameBegun;
+            var turret;
+            var fleet;
+            var destroyer;
+            var bullets;
+            var myScore;
+            var counter;
+            var counter2;
+            var bombs;
+            var drop;
+            var lives;
+            var canvasWidth;
+            var canvasHeight;
+            var level;
+            var touchStartY;
+            var touchStartX;
+            var mySound;
+            var mySound2;
+            var nextdestroyercount;
+            var startImage;
+            var direction;
+            var reloadCount;
+
+            function sound(src) {
+                this.sound = document.createElement("audio");
+                this.sound.src = src;
+                this.sound.type = "audio/mpeg";
+                this.sound.setAttribute("preload", "auto");
+                this.sound.setAttribute("controls", "none");
+                this.sound.style.display = "none";
+                document.body.appendChild(this.sound);
+                this.play = function(){
+                    this.sound.play();
+                }
+                this.stop = function(){
+                    this.sound.pause();
+                }
+            }
+            class Turret {
+                 constructor(x, y) {
+                    this.x = x;
+                    this.y = y - 100;
+                    this.width = 160;
+                    this.height = 100;
+                    this.isSurv = true;
+                    this.bottom = this.y + this.height;
+                    this.left = this.x;
+                    this. right = this.x + this.width;
+                    this.color = "black";
+                    this.image = new Image();
+                    this.image.src = "images/tanknew.png";
+                }
+                draw(ctx) {
+                    if(this.isSurv == true) {
+                      //  ctx.fillStyle = this.color;
+                      //  ctx.fillRect(this.x, this.y, this.width, this.height)
+                        ctx.drawImage(this.image,this.x, this.y, this.width, this.height);
+                    }
+                }
+                moveLeft(dis) {
+                    this.x -= dis;
+                    this.left = this.x;
+                    this.right = this.x + this.width;
+                    if (this.x < 0) {
+                        this.x = 0;
+                    }
+                }
+                moveRight(dis) {
+                    this.x += dis;
+                    this.left = this.x;
+                    this.right = this.x + this.width;
+                    if (this.x + this.width >= canvasWidth) {
+                        this.x = canvasWidth - this.width;
+                    }
+                }
+                isCollide() {
+                    for(var i = 0; i < bombs.length; i++) {
+                        if (bombs[i].bottom >= this.y && bombs[i].left <= this.right && bombs[i].right >= this.left) {
+                            bombs[i].isFunc = false;
+                            lives -= 1;
+                            mySound.play();
+                            if (lives == 0) {
+                                mySound2.play();
+                                this.width += 10
+                                this.height += 10
+                                this.image.src = "images/explosion.png";
+                                setTimeout(stop, 6000);
+                                function stop() {
+                                    initGame();
+                                    gameBegun = false;
+                                }
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                }
+             }
+
+             class SpaceShip {
+                 constructor(x, y) {
+                     this.x = x;
+                     this.y = y;
+                     this.width = 175;
+                     this.height = 50;
+                     this.bottom = this.y + this.height;
+                     this.left = this.x;
+                     this.right = this.x + this.width;
+                     this.isActive = true;
+                     this.fuel = 500;
+                     this.image = new Image();
+                     this.image.src = "images/spaceship.png";
+
+                 }
+                 updatePosition() {
+                     if (Math.random() < .9)
+                        return;
+                     var delta = (Math.random() * 60) - 30;
+                     this.x += delta;
+                     if(this.x < 0) {
+                         this.x = 0;
+                     }
+                     if(this.x > canvasWidth - this.width) {
+                         this.x = canvasWidth  - this.width;
+                         this.left = this.x;
+                         this.right = this.x + this.width;
+                     }
+                 }
+                 draw(ctx) {
+                     if(this.isActive == true) {
+                        // ctx.fillStyle = "red";
+                        // ctx.fillRect(this.x, this.y, this.width, this.height);
+                         ctx.drawImage(this.image,this.x, this.y, this.width, this.height);
+
+                     }
+                 }
+                 isCollide() {
+                     for (var i = 0; i < bullets.length; i++) {
+                         if(bullets[i].top <= this.bottom && bullets[i].left <= this.right && bullets[i].right >= this.left) {
+                             this.image.src = "images/explosion.png";
+                             bullets[i].isLive = false;
+                             this.width += 10
+                             this.height += 10
+                             myScore += 1;
+                             this.isActive = false;
+                         }
+                     }
+                 }
+             }
+
+             class SS2 {
+                 constructor(x, y, move, imgpath, whichbomb) {
+                     this.x = x;
+                     this.y = y;
+                     this.width = 200;
+                     this.height = 65;
+                     this.bottom = this.y + this.height;
+                     this.left = this.x;
+                     this.right = this.x + this.width;
+                     this.isFlying = true;
+                     this.shouldDrop = Math.round(Math.random() * 100);
+                     this.countDrop = 0;
+                     this.move = move;
+                     this.bomb = whichbomb;
+                     this.image = new Image();
+                     this.image.src = imgpath;
+                }
+                isCollide() {
+                    for (var i = 0; i < bullets.length; i++) {
+                        if(bullets[i].top <= this.bottom && bullets[i].left <= this.right && bullets[i].right >= this.left) {
+                            bullets[i].isLive = false;
+                            this.isFlying = false;
+                            myScore += 1;
+                        }
+                    }
+                }
+                updatePosition() {
+                    this.x += this.move;
+                    this.left = this.x;
+                    this.right = this.x + this.width;
+                    if (this.countDrop % this.shouldDrop == 0) {
+                        if (this.bomb == true) {
+                            var bomb2 = new B2(this.x, this.y, "images/B2_img.png", 2);
+                            bombs.push(bomb2);
+                            this.shouldDrop = Math.round(Math.random() * 105);
+                        }
+                        else {
+                            var bomb2 = new B2(this.x, this.y, "images/B2_img copy.png", -2);
+                            bombs.push(bomb2);
+                            this.shouldDrop = Math.round(Math.random() * 105);
+                        }
+                    }
+                }
+                draw(ctx) {
+                    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+                }
+            }
+
+             class Bullet {
+                 constructor(x, y) {
+                     this.x = x;
+                     this.y = y;
+                     this.width = 80;
+                     this.height = 75;
+                     this.speed = 50;
+                     this.isLive = true;
+                     this.top = this.y;
+                     this.left = this.x;
+                     this.right = this.x + this.width;
+                     this.image = new Image();
+                     this.image.src = "images/bullet.png";
+                 }
+                 draw(ctx) {
+                     if(this.isLive == true) {
+                         this.y -= this.speed;
+                         this.top = this.y;
+                         if (this.y < 0) {
+                             this.isLive = false;
+                         }
+                         //ctx.fillStyle = "lightGreen";
+                         //ctx.fillRect(this.x, this.y, this.width, this.height);
+                         ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+
+                     }
+                 }
+             }
+             class Bomb {
+                 constructor(x, y) {
+                     this.x = x;
+                     this.y = y;
+                     this.width = 40;
+                     this.height = 60;
+                     this.speed = 50;
+                     this.isFunc = true;
+                     this.bottom = this.y + this.height;
+                     this.left = this.x;
+                     this.right = this.x + this.width;
+                     this.fall = 3.5;
+                     this.image = new Image();
+                     this.image.src= "images/alienbomb.png";
+                 }
+                 draw(ctx) {
+                     if(this.isFunc == false) {
+                        return;
+                    }
+                    if(level == 1) {
+                        this.fall = 5;
+                    }
+                    this.y += this.fall;
+                    this.bottom = this.y + this.height;
+                    if (this.y + this.height >= canvasHeight) {
+                        this.isFunc = false;
+                    }
+                    //ctx.fillStyle = "darkBlue";
+                    //ctx.fillRect(this.x, this.y, this.width, this.height);
+                    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+                 }
+             }
+             class B2 {
+                 constructor(x, y, bombimg, slant) {
+                     this.x = x;
+                     this.y = y;
+                     this.width = 60;
+                     this.height = 40;
+                     this.speed = 50;
+                     this.isFunc = true;
+                     this.bottom = this.y + this.height;
+                     this.left = this.x;
+                     this.right = this.x + this.width;
+                     this.fall = 5;
+                     this.slant = slant;
+                     this.image = new Image();
+                     this.image.src = bombimg;
+                 }
+                 draw(ctx) {
+                     if(this.isFunc == false) {
+                        return;
+                    }
+                    this.y += this.fall;
+                    this.x += this.slant;
+                    this.bottom = this.y + this.height;
+                    this.left = this.x;
+                    this.right = this.x + this.width;
+                    if (this.y + this.height >= canvasHeight) {
+                        this.isFunc = false;
+                    }
+                    //ctx.fillStyle = "darkBlue";
+                    //ctx.fillRect(this.x, this.y, this.width, this.height);
+                    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+                 }
+             }
+
+
+             function checkKey(e) {
+                 e = e || window.event;
+                 if(e.keyCode == '39') {
+                     //right
+                     turret.moveRight(50);
+                 }
+                 else if(e.keyCode == '37') {
+                     //left
+                     turret.moveLeft(50);
+                 }
+                 else if(e.keyCode == '32') {
+                     //spacebar
+                     if (gameBegun) {
+                         if (reloadCount <= 0) {
+                             var bullet = new Bullet(turret.x + turret.width/2, turret.y);
+                             bullets.push(bullet);
+                             reloadCount = 100;
+                         }
+                     }
+                     else {
+                         gameBegun = true;
+                     }
+                 }
+             }
+
+             function touchStart(e) {
+                 e = e || window.event;
+                 var touchobj = e.changedTouches[0];
+                 touchStartX = touchobj.pageX;
+                 touchStartY = touchobj.pageY;
+             }
+
+             function touchEnd(e) {
+                 e = e || window.event;
+                 var touchobj = e.changedTouches[0];
+                 var touchEndX = touchobj.pageX;
+                 var touchEndY = touchobj.pageY;
+                 var touchXChange = touchEndX - touchStartX;
+                 if (touchXChange > 30) {
+                     //right
+                     turret.moveRight(50);
+                 }
+                 else if (touchXChange < 0) {
+                     //left
+                     turret.moveLeft(50);
+                 }
+                 else {
+                     //tap
+                     if (reloadCount <= 0) {
+                         var bullet = new Bullet(turret.x + turret.width/2, turret.y);
+                         bullets.push(bullet);
+                         reloadCount = 50;
+                     }
+                     else {
+                         mySound.load();
+                         mySound2.load();
+                         gameBegun = true;
+                     }
+                 }
+             }
+
+             function initGame() {
+                 nextdestroyercount = 1;
+                 gameBegun = false;
+                 lives = 3;
+                 mySound = new Audio("Sounds/bombSound.mp3");
+                 mySound2 = new Audio("Sounds/finalSound.mov");
+                 myScore = 0;
+                 level = 1;
+                 drop = 150;
+                 reloadCount = 0;
+                 turret = new Turret(canvasWidth/2, canvasHeight);
+                 fleet = [];
+                 bullets = [];
+                 bombs = [];
+                 destroyer = [];
+                 console.log(fleet.length);
+                 console.log("destroyer length: " + destroyer.length)
+                 counter = 0;
+                 counter2 = 0;
+                 direction = true;
+             }
+
+             function startGame() {
+                 console.log("game started")
+                 var c = document.getElementById("myCanvas");
+                 var ctx = c.getContext("2d");
+                 c.width = window.innerWidth - 50;
+                 c.height = window.innerHeight - 75;
+                 canvasWidth = c.width;
+                 canvasHeight = c.height;
+                 startImage = new Image();
+                 startImage.src = "images/startButton.png";
+                 initGame();
+                 level = 0;
+                 ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                 ctx.fillStyle = "black";
+                 ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                 setInterval(function () {
+                    if (!gameBegun){
+                        console.log("gameNoStart");
+                        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                        ctx.fillStyle = "black";
+                        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                        ctx.drawImage(startImage, canvasWidth/2 - 75, canvasHeight/2 - 65, 150, 130);
+                        return;
+                    }
+
+                    if (lives == 0 ) {
+                        turret.draw(ctx);
+                        return;
+                    }
+                    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                    ctx.fillStyle = "black";
+                    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                    ctx.fillStyle = "lightBlue";
+                    ctx.fillRect(15, canvasHeight/2 - 100, 20, 200);
+                    ctx.fillStyle = "black";
+                    if(reloadCount == 100) {
+                        ctx.fillRect(15, canvasHeight/2 - 100, 20, 200);
+                    }
+                    else if (reloadCount >= 90) {
+                        ctx.fillRect(15, canvasHeight/2 - 100, 20, 180);
+                    }
+                    else if (reloadCount >= 80) {
+                        ctx.fillRect(15, canvasHeight/2 - 100, 20, 160);
+                    }
+                    else if (reloadCount >= 70) {
+                        ctx.fillRect(15, canvasHeight/2 - 100, 20, 140);
+                    }
+                    else if (reloadCount >= 60) {
+                        ctx.fillRect(15, canvasHeight/2 - 100, 20, 120);
+                    }
+                    else if (reloadCount >= 50) {
+                        ctx.fillRect(15, canvasHeight/2 - 100, 20, 100);
+                    }
+                    else if (reloadCount >= 40) {
+                        ctx.fillRect(15, canvasHeight/2 - 100, 20, 80);
+                    }
+                    else if (reloadCount >= 30) {
+                        ctx.fillRect(15, canvasHeight/2 - 100, 20, 60);
+                    }
+                    else if (reloadCount >= 20) {
+                        ctx.fillRect(15, canvasHeight/2 - 100, 20, 40);
+                    }
+                    else if (reloadCount >= 10) {
+                        ctx.fillRect(15, canvasHeight/2 - 100, 20, 180);
+                    }
+
+                    else {
+                        ctx.fillStyle = "lightBlue";
+                        ctx.fillRect(15, canvasHeight/2 - 100, 20, 200);
+
+                    }
+
+                    for(var i = 0; i < fleet.length; i++) {
+                        fleet[i].updatePosition();
+                        fleet[i].isCollide();
+                    }
+                    turret.draw(ctx);
+                    for(var i = 0; i < destroyer.length; i++) {
+                        if(destroyer[i].isFlying == false) {
+                            destroyer.splice(i, 1);
+                        }
+                    }
+                    for(var i = 0; i < destroyer.length; i++) {
+                        if (destroyer[i].isFlying == true) {
+                            destroyer[i].isCollide();
+                            destroyer[i].updatePosition();
+                            destroyer[i].countDrop++;
+                        }
+                    }
+                    for(var i = 0; i < destroyer.length; i++) {
+                        if(destroyer[i].isFlying == true) {
+                            destroyer[i].draw(ctx);
+                        }
+                    }
+
+                    for(var i = 0; i < bullets.length; i++) {
+                        if(bullets[i].isLive == false) {
+                            bullets.splice(i, 1);
+                        }
+                    }
+                    for(var i = 0; i < bullets.length; i++) {
+                        bullets[i].draw(ctx);
+                    }
+
+                    for(var i = 0; i < fleet.length; i++) {
+                        if(fleet[i].isActive == false) {
+                            fleet.splice(i, 1);
+                        }
+                    }
+                    for(var i = 0; i < bombs.length; i++) {
+                        if(bombs[i].isFunc == false) {
+                            bombs.splice(i, 1);
+                        }
+                    }
+                    if(level == 1) {
+                        drop = 75;
+                    }
+                    for(var i = 0; i < fleet.length; i++) {
+                        if(fleet[i].fuel % drop == 0 ) {
+                            var bomb = new Bomb(fleet[i].x + 30, fleet[i].y + fleet[i].height);
+                            bombs.push(bomb);
+                        }
+                    }
+                    for(var i = 0; i < fleet.length; i++) {
+                        fleet[i].draw(ctx);
+                    }
+                    for(var i = 0; i < bombs.length; i++) {
+                        bombs[i].draw(ctx);
+                    }
+
+                    if(level == 0 && myScore >= 5) {
+                        level++;
+                        fleet.length = 0;
+                        bombs.length = 0;
+                        myScore = 0;
+                        lives = 3;
+                    }
+                    if(level == 1 && myScore >= 10) {
+                        level++;
+                        fleet.length = 0;
+                        bombs.length = 0;
+                        myScore = 0;
+                        lives = 3;
+                    }
+
+                    if (turret.isCollide()) {
+                        turret.draw(ctx);
+                        ctx.fillStyle = "white"
+                        ctx.font = "50px Arial";
+                        ctx.fillText("GAME OVER", canvasWidth/2 - 100, canvasHeight/2)
+                    }
+                    ctx.font = "30px Arial";
+                    ctx.fillStyle = "lightGreen";
+                    ctx.fillText("Score = " + myScore, 10, 50);
+                    ctx.fillText("Lives = " + lives, canvasWidth -200, 50);
+                    ctx.fillText("Level = " + level, canvasWidth / 2, 50);
+
+                    counter++;
+                    if (level == 0 || level == 1) {
+                        if(counter % 150 == 0) {
+                            var spaceShip = new SpaceShip((Math.random() * canvasWidth), (Math.random() * 100));
+                            fleet.push(spaceShip);
+                        }
+                    }
+                    if(level == 2) {
+                        counter2++;
+                        if(counter2 == nextdestroyercount) {
+                            if (direction) {
+                                var ss2 = new SS2 (0, 50, 10, "images/ss2.png", true);
+                                destroyer.push(ss2);
+                                var x = Math.round(Math.random() * 70 + 80);
+                                nextdestroyercount = counter2 + x;
+                                direction = false;
+                            } else {
+                                var ss2 = new SS2 (canvasWidth, 50, -10, "images/ss2 copy.png", false);
+                                destroyer.push(ss2);
+                                var x = Math.round(Math.random() * 70 + 80);
+                                nextdestroyercount = counter2 + x;
+                                direction = true;
+                            }
+                        }
+                    }
+                    for(var i = 0; i < fleet.length; i++) {
+                        fleet[i].fuel -= 1;
+                        if(fleet[i].fuel == 0) {
+                            fleet[i].isActive = false;
+                        }
+                    }
+                    reloadCount -= 1;
+                }, 10);
+                document.onkeydown = checkKey;
+                document.ontouchstart = touchStart;
+                document.ontouchend = touchEnd;
+            }
+
+        </script>
+    </head>
+    <body onload="startGame()">
+        <canvas id="myCanvas" width="1200" height="965" style = "border : 3px solid #090909;">
+        </canvas>
+</body>
+</html>

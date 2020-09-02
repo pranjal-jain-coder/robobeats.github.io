@@ -1,0 +1,210 @@
+<html>
+    <head>
+        <script>
+
+        var runner;
+        var obstacle;
+        var newObsCoun;
+        var moveDir;
+        var move;
+        var newObsSpeed;
+        var runnerObsCol;
+        var gameBegun;
+
+        class Runner {
+            constructor() {
+                this.x = 80;
+                this.width = 140;
+                this.height = 86;
+                this.y = canvasHeight/2;
+                this.isAlive = true;
+                this.top = this.y;
+                this.bottom = this.y + this.height;
+                this.left = this.x;
+                this.right = this.x + this.width;
+                this.image = new Image();
+                this.image.src = "images/runner.png";
+            }
+            draw(ctx) {
+                ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            }
+            isCollide() {
+                for (var i = 0; i < obstacle.length; i++) {
+                    if (obstacle[i].bottom >= runner.top && obstacle[i].top <= runner.bottom && obstacle[i].left <= runner.right && obstacle[i].right >= runner.left) {
+                        obstacle.splice(i, 1);
+                        gameBegun = false;
+                    }
+                }
+            }
+            changeY() {
+                if(move) {
+                    if (!moveDir) {
+                        this.y++;
+                        if (this.y > canvasHeight - this.height) {
+                            this.y = canvasHeight - this.height;
+                        }
+                    } else {
+                        this.y--;
+                        if (this.y < 0) {
+                            this.y = 0;
+                        }
+                    }
+                    this.top = this.y;
+                    this.bottom = this.y + this.height;
+                }
+            }
+        }
+        class Obstacle {
+            constructor(x, y, asteroid) {
+                this.y = y;
+                this.x = x;
+                this.width = 40;
+                this.height = 52;
+                this.isAlive = true;
+                this.top = this.y;
+                this.bottom = this.y + this.height;
+                this.left = this.x;
+                this.right = this.x + this.width;
+                this.image = new Image();
+                this.image.src = asteroid;
+            }
+            draw(ctx) {
+                if (gameBegun) {
+                    this.x -= 3;
+                }
+                this.left = this.x;
+                this.right = this.x + this.width;
+                ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            }
+        }
+
+        function checkKey(e) {
+            e = e || window.event;
+            if (e.keyCode == '38') {
+                //up
+                move = true;
+                moveDir = true;
+                setTimeout(function stopMove() {
+                    move = false
+                }, 300);
+            }
+            else if (e.keyCode == '40') {
+                //down
+                move = true;
+                moveDir = false;
+                setTimeout(function stopMove() {
+                    move = false
+                }, 300);
+            }
+        }
+        function touchStart(e) {
+            e = e || window.event;
+            var touchobj = e.changedTouches[0];
+            touchStartX = touchobj.pageX;
+            touchStartY = touchobj.pageY;
+        }
+        function touchEnd(e) {
+            e = e || window.event;
+            var touchobj = e.changedTouches[0];
+            var touchEndX = touchobj.pageX;
+            var touchEndY = touchobj.pageY;
+            var touchXChange = touchEndX - touchStartX;
+            var touchYChange = touchStartY - touchEndY;
+            if (touchYChange <= -30) {
+                //down
+                move = true;
+                moveDir = false;
+                setTimeout(function stopMove() {
+                    move = false
+                }, 300);
+            }
+            if (touchYChange >= 30) {
+                //up
+                move = true;
+                moveDir = true;
+                setTimeout(function stopMove() {
+                    move = false
+                }, 300);
+            }
+        }
+
+        function initGame() {
+            runner = new Runner();
+            newObsCoun = Math.random() * 100 + 60;
+            obstacle = [];
+            move = false;
+            direction = false;
+            newObsSpeed = 300;
+            runnerObsCol = false;
+            gameBegun = true;
+        }
+        function startGame() {
+            var c = document.getElementById("myCanvas");
+            var ctx = c.getContext("2d");
+            c.width = window.innerWidth - 30;
+            c.height = window.innerHeight - 30;
+            canvasWidth = c.width;
+            canvasHeight = c.height;
+            initGame();
+            setInterval(function () {
+                if (!gameBegun) {
+                    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                    ctx.fillStyle = "black";
+                    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                    runner.draw(ctx);
+                    for (var i = 0; i < obstacle.length; i++) {
+                        obstacle[i].draw(ctx);
+                    }
+                    ctx.fillStyle = "red";
+                    ctx.font = "50px Arial";
+                    ctx.fillText("Game Over", canvasWidth/2 - 100, canvasHeight/2);
+                    return;
+                }
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                ctx.fillStyle = "black";
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                runner.draw(ctx);
+                runner.isCollide();
+                runner.changeY();
+
+                for (var i = 0; i < obstacle.length; i++) {
+                    if (obstacle[i].x <= 0) {
+                        obstacle.splice(i, 1);
+                    }
+                }
+
+                if (newObsCoun <= 0) {
+                    var imgPicker = Math.random();
+                    if (imgPicker <= .3) {
+                        var obs = new Obstacle(canvasWidth, Math.random() * canvasHeight - 200, "images/asteroid1.png");
+                    }
+                    else if (imgPicker >= .6) {
+                        var obs = new Obstacle(canvasWidth, Math.random() * canvasHeight - 200, "images/asteroid2.png");
+                    }
+                    else {
+                        var obs = new Obstacle(canvasWidth, Math.random() * canvasHeight - 200, "images/asteroid3.png");
+                    }
+                    obstacle.push(obs);
+                    newObsCoun = Math.random() * newObsSpeed + 100;
+                    if (newObsSpeed > 150) {
+                        newObsSpeed -= 2;
+                    }
+
+                }
+                for (var i = 0; i < obstacle.length; i++) {
+                    obstacle[i].draw(ctx);
+                }
+                newObsCoun -= 1;
+
+                document.onkeydown = checkKey;
+                document.ontouchstart = touchStart;
+                document.ontouchend = touchEnd;
+            }, 4)
+        }
+        </script>
+    </head>
+    <body onload = "startGame()">
+        <canvas id = "myCanvas" width = "1200" height = "965" style = "border: 3px solid #090909;">
+        </canvas>
+    </body>
+</html>

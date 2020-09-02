@@ -1,0 +1,684 @@
+<html>
+    <head>
+        <h2>Avoid cars. If you get to close, your car will get damaged.</h2>
+        <script>
+
+        //Global variables
+        var gameBegun;
+        var background;
+        var car;
+        var obstacles;
+        var obstacles1;
+        var counObs1Draw;
+        var counObs2Draw;
+        var myLives;
+        var myScore;
+        var touchStartX;
+        var touchStartY;
+        var soundCrash;
+        var bullets;
+        var reloadCount;
+        var standStill;
+        var gameOver;
+        var startImage;
+        var heal;
+        var instaFire;
+        var shouldInstaFire;
+        var stopInstaFire;
+        var invincible;
+        var stopInvincible;
+        var shouldInvincible;
+        var zoom;
+        var stopZoom;
+        var shouldZoom;
+
+        class Car {
+            constructor(x) {
+                this.x = x;
+                this.y = canvasHeight - 300;
+                this.width = 175;
+                this.height = 270;
+                this.left = this.x;
+                this.right = this.x + this.width;
+                this.top = this.y;
+                this.bottom = this.y + this.height;
+                this.isFunc = true;
+                this.image = new Image();
+                this.image.src = "Images/car.png";
+            }
+            draw(ctx) {
+                if (this.isFunc == true) {
+                    // ctx.fillStyle = "darkBlue";
+                    // ctx.fillRect(this.x, this.y, this.width, this.height);
+                    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+                }
+            }
+            moveLeft(dis) {
+                this.x -= dis;
+                this.left = this.x;
+                this.right = this.x + this.width;
+                if (this.x < canvasWidth / 4) {
+                    this.x = canvasWidth / 4;
+                }
+            }
+            moveRight(dis) {
+                this.x += dis;
+                this.left = this.x;
+                this.right = this.x + this.width;
+                if (this.x + this.width >= canvasWidth - canvasWidth / 4) {
+                    this.x = canvasWidth - (canvasWidth / 4 + this.width);
+                }
+            }
+            isCollide() {
+                for (var i = 0; i < obstacles.length; i++) {
+                    if (this.left <= obstacles[i].right && this.right >= obstacles[i].left && this.top < obstacles[i].bottom) {
+                        if (!shouldInvincible && !shouldZoom) {
+                            myLives -= 1;
+                            soundCrash.play();
+                            if (myScore <= 1000) {
+                                myScore -= 150
+                            }
+                            else {
+                                myScore -= 200
+                            }
+                        }
+                        obstacles.splice(i, 1);
+                        if(myScore < 0) {
+                            myScore = 0;
+                        }
+                        if (myLives == 0) {
+                            gameOver = true;
+                            standStill = true;
+                            this.image.src = "images/explosion.png";
+                            setTimeout(stop, 900);
+                            function stop() {
+                                initGame();
+                                gameBegun = false;
+                            }
+                            return true;
+                        }
+                    }
+                }
+                for (var i = 0; i < obstacles1.length; i++) {
+                    if (this.left <= obstacles1[i].right && this.right >= obstacles1[i].left && this.top < obstacles1[i].bottom) {
+                        if (!shouldInvincible && !shouldZoom) {
+                            myLives -= 1;
+                            soundCrash.play();
+                            if (myScore <= 1500) {
+                                myScore -= 150
+                            }
+                            else {
+                                myScore -= 200
+                            }
+                        }
+                        obstacles1.splice(i, 1);
+                        if (myLives == 0) {
+                            gameOver = true;
+                            standStill = true;
+                            this.image.src = "images/explosion.png";
+                            setTimeout(stop, 900);
+                            function stop() {
+                                initGame();
+                                gameBegun = false;
+                            }
+                            return true;
+                        }
+                    }
+                }
+                for (var i = 0; i < heal.length; i++) {
+                    if (this.left <= heal[i].right && this.right >= heal[i].left && this.top < heal[i].bottom) {
+                        myLives = 1000;
+                        heal.splice(i, 1);
+                    }
+                }
+                for (var i = 0; i < instaFire.length; i++) {
+                    if (this.left <= instaFire[i].right && this.right >= instaFire[i].left && this.top < instaFire[i].bottom) {
+                        shouldInstaFire = true;
+                        stopInstaFire = 500;
+                        instaFire.splice(i, 1);
+                    }
+                }
+                for (var i = 0; i < invincible.length; i++) {
+                    if (this.left <= invincible[i].right && this.right >= invincible[i].left && this.top < invincible[i].bottom) {
+                        shouldInvincible = true;
+                        stopInvincible = 500;
+                        invincible.splice(i, 1);
+                    }
+                }
+                for (var i = 0; i < zoom.length; i++) {
+                    if (this.left <= zoom[i].right && this.right >= zoom[i].left && this.top < zoom[i].bottom) {
+                        shouldZoom = true;
+                        stopZoom = 300;
+                        myScore += 100;
+                        zoom.splice(i, 1);
+                    }
+                }
+            }
+        }
+
+        class Obstacle1 {
+            constructor(x) {
+                this.x = x;
+                this.y = -200;
+                this.width = 200;
+                this.height = 220;
+                this.left = this.x;
+                this.right = this.x + this.width;
+                this.bottom = this.y + this.height;
+                this.left = this.x;
+                this.right = this.x + this.width;
+                this.bottom = this.y + this.height;
+                this.top = this.y;
+                this.isActive = true;
+                this.image = new Image();
+                this.image.src = "Images/Barricade.png";
+            }
+            draw(ctx) {
+                if (!standStill) {
+                    if (myScore <= 1000) {
+                        this.y += 11;
+                    }
+                    else {
+                        this.y += 13;
+                    }
+                }
+                this.bottom = this.y + this.height;
+                // ctx.fillStyle = "brown";
+                // ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            }
+            isCollide() {
+                for (var i = 0; i < bullets.length; i++) {
+                    if(bullets[i].top <= this.bottom && bullets[i].left <= this.right && bullets[i].right >= this.left) {
+                        bullets[i].isLive = false;
+                        this.width += 10
+                        this.height += 10
+                        myScore += 100;
+                        this.isActive = false;
+                        var dropPowerup = Math.random();
+                        if(dropPowerup >= .8 && myScore >= 700) {
+                            var whichPowerUp = Math.random();
+                            if (whichPowerUp <= .3) {
+                                var healer = new PowerupHeal(this.x, this.y);
+                                heal.push(healer);
+                            }
+                            else if (.3 < whichPowerUp && whichPowerUp < .6){
+                                var gunPowerUp = new PowerupInstFire(this.x, this.y);
+                                instaFire.push(gunPowerUp);
+                            }
+
+                            else if (whichPowerUp > .9) {
+                                var zoomPoewrup = new PowerupZoom(this.x, this.y);
+                                zoom.push(zoomPoewrup);
+                            }
+
+                            else if (whichPowerUp >= .6){
+                                var armour = new PowerupInvincible(this.x, this.y);
+                                invincible.push(armour);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        class Obstacle2 {
+            constructor(x) {
+                this.x = x;
+                this.y = -200;
+                this.width = 400;
+                this.height = 50;
+                this.left = this.x;
+                this.right = this.x + this.width;
+                this.bottom = this.y + this.height;
+                this.left = this.x;
+                this.right = this.x + this.width;
+                this.bottom = this.y + this.height;
+                this.top = this.y;
+                this.isWorking = true;
+                this.image = new Image();
+                this.image.src = "Images/barricadeWall.png"
+            }
+            draw(ctx) {
+                if (!standStill) {
+                    if (myScore <= 1000) {
+                        this.y += 8;
+                    }
+                    else {
+                        this.y += 10;
+                    }
+                }
+                this.bottom = this.y + this.height;
+                ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            }
+
+            isCollide() {
+                for (var i = 0; i < bullets.length; i++) {
+                    if(bullets[i].top <= this.bottom && bullets[i].left <= this.right && bullets[i].right >= this.left) {
+                        bullets[i].isLive = false;
+                        this.width += 10
+                        this.height += 10
+                        myScore += 150;
+                        this.isWorking = false;
+                    }
+                }
+            }
+        }
+
+        class Bullet {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 90;
+                this.height = 80;
+                this.left = this.x;
+                this.right = this.x + this.width;
+                this.top = this.y;
+                this.isLive = true;
+                this.image = new Image();
+                this.image.src = "Images/Bullet.png";
+            }
+            draw(ctx) {
+                this.y -= 25;
+                this.top = this.y;
+                ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            }
+        }
+
+        class PowerupHeal {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 80;
+                this.height = 80;
+                this.left = this.x;
+                this.right = this.x + this.width;
+                this.bottom = this.y + this.height;
+                this.image = new Image();
+                this.image.src = "Images/heal.png";
+            }
+            draw(ctx) {
+                this.y += 15;
+                this.bottom = this.y + this.height;
+                ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            }
+            draw(ctx) {
+                this.y += 10;
+                this.bottom = this.y + this.height;
+                ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            }
+        }
+
+        class PowerupInstFire {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 80;
+                this.height = 80;
+                this.left = this.x;
+                this.right = this.x + this.width;
+                this.bottom = this.y + this.height;
+                this.image = new Image();
+                this.image.src = "Images/instaFire.png";
+            }
+            draw(ctx) {
+                this.y += 10;
+                this.bottom = this.y + this.width;
+                ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            }
+        }
+
+        class PowerupInvincible {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 80;
+                this.height = 80;
+                this.left = this.x;
+                this.right = this.x + this.width;
+                this.bottom = this.y + this.height;
+                this.image = new Image();
+                this.image.src = "Images/invincible.png";
+            }
+            draw(ctx) {
+                this.y += 10;
+                this.bottom = this.y + this.width;
+                ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            }
+        }
+
+        class PowerupZoom {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 80;
+                this.height = 80;
+                this.left = this.x;
+                this.right = this.x + this.width;
+                this.bottom = this.y + this.height;
+                this.image = new Image();
+                this.image.src = "Images/zoom.png";
+            }
+            draw(ctx) {
+                this.y += 10;
+                this.bottom = this.y + this.width;
+                ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            }
+        }
+
+        class Background {
+            constructor() {
+                this.x = 0;
+                this.y = -canvasHeight;
+                this.height = canvasHeight * 2;
+                this.width = canvasWidth;
+                this.image = new Image();
+                this.image.src = "Images/Background.png";
+            }
+            draw(ctx) {
+                if (!standStill) {
+                    if(!shouldZoom) {
+                        this.y += 8
+                    }
+                    else {
+                        this.y += 10
+                    }
+                }
+                if(this.y >= 0) {
+                    this.y = -canvasHeight;
+                }
+                ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            }
+        }
+
+        function checkKey(e) {
+            e = e || window.event;
+            if(e.keyCode == '39') {
+                //right
+                car.moveRight(75);
+            }
+            else if(e.keyCode == '37') {
+                //left
+                car.moveLeft(75);
+            }
+            else if(e.keyCode == '32') {
+                    //spacebar
+                    if (gameBegun) {
+                        if (reloadCount <= 0) {
+                            var bullet = new Bullet(car.x + 42, car.y);
+                            bullets.push(bullet);
+                            reloadCount = 0;
+                        }
+                     }
+                     else {
+                         soundCrash.load();
+                         gameOver = false;
+                         standStill = false;
+                         gameBegun = true;
+                     }
+            }
+        }
+
+        function touchStart(e) {
+                 e = e || window.event;
+                 var touchobj = e.changedTouches[0];
+                 touchStartX = touchobj.pageX;
+                 touchStartY = touchobj.pageY;
+             }
+
+             function touchEnd(e) {
+                 e = e || window.event;
+                 var touchobj = e.changedTouches[0];
+                 var touchEndX = touchobj.pageX;
+                 var touchEndY = touchobj.pageY;
+                 var touchXChange = touchEndX - touchStartX;
+                 if (touchXChange > 30) {
+                     //right
+                     car.moveRight(100);
+                 }
+                 else if (touchXChange < 0) {
+                     //left
+                     car.moveLeft(100);
+                 }
+
+                 else {
+                     //tap
+                     if (gameBegun) {
+                         if (reloadCount <= 0) {
+                             var bullet = new Bullet(car.x + 42, car.y);
+                             bullets.push(bullet);
+                             reloadCount = 0;
+                         }
+                     }
+                     else {
+                          soundCrash.load();
+                          gameOver = false;
+                          standStill = false;
+                          gameBegun = true;
+                      }
+                 }
+             }
+
+             function initGame() {
+                 standStill = true;
+                 gameBegun = false;
+                 counObs1Draw = 1;
+                 counObs2Draw = 0;
+                 myLives = 1000;
+                 myScore = 0;
+                 car = new Car(canvasWidth / 2);
+                 obstacles = [];
+                 obstacles1 = [];
+                 bullets = [];
+                 heal = [];
+                 instaFire = [];
+                 invincible = [];
+                 zoom = [];
+                 shouldInstaFire = false;
+                 stopInstaFire = 0;
+                 shouldInvincible = false;
+                 stopInvincible = 0;
+                 shouldZoom = false;
+                 stopZoom = -1;
+                 reloadCount = 0;
+                 background = new Background;
+                 soundCrash = new Audio("Sounds/car crash.mov");
+             }
+
+        function startGame() {
+            var c = document.getElementById("myCanvas");
+            var ctx = c.getContext("2d");
+            c.width = window.innerWidth - 50;
+            c.height = window.innerHeight - 75;
+            canvasHeight = c.height;
+            canvasWidth = c.width;
+            gameOver = false;
+            startImage = new Image();
+            startImage.src = "Images/startButton.png";
+            initGame();
+            setInterval(function() {
+                if (!gameBegun) {
+                    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                    background.draw(ctx);
+                    ctx.drawImage(startImage, canvasWidth/2 - 75, canvasHeight/2 - 65, 150, 130);
+                    return;
+                }
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                background.draw(ctx);
+                ctx.fillStyle = "gray";
+                ctx.fillRect(canvasWidth / 4, 0, canvasWidth / 2, canvasHeight);
+                ctx.fillStyle = "lightBlue";
+                ctx.fillRect(15, canvasHeight/2 - 100, 20, 200);
+                ctx.fillStyle = "black";
+                if(reloadCount == 100) {
+                    ctx.fillRect(15, canvasHeight/2 - 100, 20, 200);
+                }
+                else if (reloadCount >= 90) {
+                    ctx.fillRect(15, canvasHeight/2 - 100, 20, 180);
+                }
+                else if (reloadCount >= 80) {
+                    ctx.fillRect(15, canvasHeight/2 - 100, 20, 160);
+                }
+                else if (reloadCount >= 70) {
+                    ctx.fillRect(15, canvasHeight/2 - 100, 20, 140);
+                }
+                else if (reloadCount >= 60) {
+                    ctx.fillRect(15, canvasHeight/2 - 100, 20, 120);
+                }
+                else if (reloadCount >= 50) {
+                    ctx.fillRect(15, canvasHeight/2 - 100, 20, 100);
+                }
+                else if (reloadCount >= 40) {
+                    ctx.fillRect(15, canvasHeight/2 - 100, 20, 80);
+                }
+                else if (reloadCount >= 30) {
+                    ctx.fillRect(15, canvasHeight/2 - 100, 20, 60);
+                }
+                else if (reloadCount >= 20) {
+                    ctx.fillRect(15, canvasHeight/2 - 100, 20, 40);
+                }
+                else if (reloadCount >= 10) {
+                    ctx.fillRect(15, canvasHeight/2 - 100, 20, 180);
+                }
+
+                else {
+                    ctx.fillStyle = "lightBlue";
+                    ctx.fillRect(15, canvasHeight/2 - 100, 20, 200);
+
+                }
+
+                if(gameOver) {
+                    ctx.fillStyle = "black";
+                    ctx.font = "100px Arial";
+                    ctx.fillText("GAME OVER", canvasWidth/2 - canvasWidth/6, canvasHeight/2)
+                }
+
+                if (shouldInvincible) {
+                    ctx.fillStyle = "AntiqueWhite";
+                    ctx.font = "25px Arial";
+                    ctx.fillText("Powerup time = " + Math.round(stopInvincible/100), canvasWidth/2 - canvasWidth/8, 50);
+                }
+
+                if (shouldZoom) {
+                    ctx.fillText("Powerup time = " + Math.round(stopZoom/100), canvasWidth/2 - canvasWidth/8, 50);
+                }
+
+                if (shouldInstaFire) {
+                    ctx.fillText("Powerup time = " + Math.round(stopInstaFire/100), canvasWidth/2 - canvasWidth/8, 50);
+                }
+
+                car.draw(ctx);
+
+                for (var i = 0; i < obstacles.length; i++) {
+                    if(obstacles[i].x < canvasWidth / 4) {
+                        obstacles[i].x = canvasWidth / 4;
+                        obstacles[i].left = obstacles[i].x;
+                        obstacles[i].right = obstacles[i].x + obstacles[i].width
+                    }
+                    if(obstacles[i].right > canvasWidth / 4 * 3) {
+                        obstacles[i].x = canvasWidth / 4 * 3 - obstacles[i].width;
+                        obstacles[i].left = obstacles[i].x;
+                        obstacles[i].right = obstacles[i].x + obstacles[i].width
+                    }
+                }
+
+                for (var i = 0; i < obstacles.length; i++) {
+                    if(obstacles[i].y > car.bottom || obstacles[i].isActive == false) {
+                        obstacles.splice(i, 1);
+                    }
+                    obstacles[i].draw(ctx);
+                }
+
+                for (var i = 0; i < obstacles1.length; i++) {
+                    if(obstacles1[i].y > car.bottom || obstacles1[i].isWorking == false) {
+                        obstacles1.splice(i, 1);
+                    }
+                    obstacles1[i].draw(ctx);
+                }
+
+                for (var i = 0; i < bullets.length; i++) {
+                    if(bullets[i].y <= 0) {
+                        bullets[i].isLive = false;
+                    }
+                    if (bullets[i].isLive == false) {
+                        bullets.splice(i, 1);
+                    }
+                    bullets[i].draw(ctx);
+                }
+
+                if(stopInstaFire <= 0) {
+                    shouldInstaFire = false;
+                }
+
+                if(stopInvincible <= 0) {
+                    shouldInvincible = false;
+                }
+
+                if (shouldInstaFire) {
+                    reloadCount = 0;
+                }
+
+                if(stopZoom <= 0) {
+                    shouldZoom = false;
+                }
+
+                for (var i = 0; i < obstacles.length; i++) {
+                    obstacles[i].isCollide();
+                }
+                for (var i = 0; i < obstacles1.length; i++) {
+                    obstacles1[i].isCollide();
+                }
+                for (var i = 0; i < heal.length; i++) {
+                    heal[i].draw(ctx);
+                }
+                for (var i = 0; i < instaFire.length; i++) {
+                    instaFire[i].draw(ctx);
+                }
+                for (var i = 0; i < invincible.length; i++) {
+                    invincible[i].draw(ctx);
+                }
+                for (var i = 0; i < zoom.length; i++) {
+                    zoom[i].draw(ctx);
+                }
+
+                if (shouldZoom) {
+                    obstacles = [];
+                }
+
+                car.isCollide();
+                counObs1Draw++;
+                counObs2Draw++;
+                if (counObs1Draw % Math.round(Math.random() * 15 + 80) == 0 && !shouldZoom && obstacles.length <= 3) {
+                    var obstacle = new Obstacle1(Math.round(Math.random() * canvasWidth / 2 + canvasWidth / 4));
+                    obstacles.push(obstacle);
+                }
+                if ((counObs2Draw % Math.round(Math.random() * 15 + 200) == 0) && !shouldZoom && obstacles1.length <= 3 && myScore >= 600) {
+                    var obstacle = new Obstacle2(Math.round(Math.random() * (canvasWidth / 2  - 500)+ canvasWidth / 4));
+                    obstacles1.push(obstacle);
+                }
+                myScore++;
+                reloadCount -= 1;
+                stopInstaFire -= 1;
+                stopInvincible -= 1;
+                stopZoom -= 1;
+
+                ctx.font = "30px Arial";
+                ctx.fillStyle = "AntiqueWhite";
+                ctx.fillText("Score = " + myScore, 50, 50);
+                ctx.fillText("Lives = " + myLives, canvasWidth -200, 50);
+                document.ontouchstart = touchStart;
+                document.ontouchend = touchEnd;
+            }, 10)
+        }
+            document.onkeydown = checkKey;
+            document.ontouchstart = touchStart;
+            document.ontouchend = touchEnd;
+        </script>
+    </head>
+    <body onload="startGame()">
+
+        <canvas id="myCanvas" width = "1900" height = "900" style = "border:3px solid #000000">
+        </canvas>
+
+    </body>
+</html>

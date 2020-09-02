@@ -1,0 +1,1234 @@
+<!DOCTYPE HTML>
+<html>
+    <p> Use arrow keys and spacebar on laptop. Use swipe and tap on phone/tablet.</p>
+    <head>
+        <div onmousedown = buy(event)>
+        <script>
+            //Global var
+            var move;
+            var moveDir;
+            var shouldTick;
+            var shouldTick2;
+            var shouldTick3;
+            var gameBegun;
+            var turret;
+            var fleet;
+            var destroyer;
+            var bombers;
+            var bullets;
+            var myScore;
+            var counter;
+            var counter2;
+            var counter3;
+            var countnewbomber;
+            var nextnewbomber;
+            var bombs;
+            var coins;
+            var drop;
+            var lives;
+            var invincible;
+            var stopInvincible;
+            var shouldInvincible;
+            var scoreDoubler;
+            var stopScoreDoubler;
+            var shouldScoreDouble;
+            var instaFire;
+            var stopInstaFire;
+            var shouldInstaFire;
+            var healers;
+            var healTo;
+            var myCoins
+            var canvasWidth;
+            var canvasHeight;
+            var level;
+            var touchStartY;
+            var touchStartX;
+            var mySound;
+            var mySound2;
+            var fireSound;
+            var nextdestroyercount;
+            var nextdestroyercount2;
+            var startImage;
+            var direction;
+            var reloadCount;
+            var inShop;
+            var shop;
+            var powerupTime;
+            var reloadTime;
+            var whichSS;
+            var realReloadTime;
+            var keepMoving;
+            var playerWin;
+
+            function sound(src) {
+                this.sound = document.createElement("audio");
+                this.sound.src = src;
+                this.sound.type = "audio/mpeg";
+                this.sound.setAttribute("preload", "auto");
+                this.sound.setAttribute("controls", "none");
+                this.sound.style.display = "none";
+                document.body.appendChild(this.sound);
+                this.play = function(){
+                    this.sound.play();
+                }
+                this.stop = function(){
+                    this.sound.pause();
+                }
+            }
+
+            class Turret {
+                 constructor(x, y) {
+                    this.x = x;
+                    this.y = y - 150;
+                    this.width = 160;
+                    this.height = 100;
+                    this.isSurv = true;
+                    this.top = this.y;
+                    this.bottom = this.y + this.height;
+                    this.left = this.x;
+                    this.right = this.x + this.width;
+                    this.color = "black";
+                    this.image = new Image();
+                    this.image.src = "images/tanknew.png";
+                }
+                draw(ctx) {
+                    if (this.isSurv == true) {
+                        ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+                    }
+                }
+                moveLeft(dis) {
+                    this.x -= dis;
+                    this.left = this.x;
+                    this.right = this.x + this.width;
+                    if (this.x < 0) {
+                        this.x = 0;
+                    }
+                }
+                moveRight(dis) {
+                    this.x += dis;
+                    this.left = this.x;
+                    this.right = this.x + this.width;
+                    if (this.x + this.width >= canvasWidth) {
+                        this.x = canvasWidth - this.width;
+                    }
+                }
+                isCollide() {
+                    for (var i = 0; i < invincible.length; i++) {
+                        if (invincible[i].left <= this.right && invincible[i].right >= this.left && invincible[i].bottom >= this.top) {
+                            invincible.splice(i, 1);
+                            shouldInvincible = true;
+                            stopInvincible += powerupTime;
+                        }
+                    }
+                    for (var i = 0; i < healers.length; i++) {
+                        if (healers[i].left <= this.right && healers[i].right >= this.left && healers[i].bottom >= this.top) {
+                            healers.splice(i, 1);
+                            lives = healTo;
+                                shouldInvincible = true;
+                                stopInvincible += powerupTime/5;
+                        }
+                    }
+                    for (var i = 0; i < instaFire.length; i++) {
+                        if (instaFire[i].left <= this.right && instaFire[i].right >= this.left && instaFire[i].bottom >= this.top) {
+                            instaFire.splice(i, 1);
+                            shouldInstaFire = true;
+                            stopInstaFire = powerupTime
+                            reloadTime = 10;
+                        }
+                    }
+                    for (var i = 0; i < scoreDoubler.length; i++) {
+                        if (scoreDoubler[i].left <= this.right && scoreDoubler[i].right >= this.left && scoreDoubler[i].bottom >= this.top) {
+                            scoreDoubler.splice(i, 1);
+                            shouldScoreDouble = true;
+                            stopScoreDoubler = powerupTime;
+                        }
+                    }
+
+                    for (var i = 0; i < coins.length; i++) {
+                        if (this.left <= coins[i].right && this.right >= coins[i].left && this.top <= coins[i].bottom) {
+                            coins.splice(i, 1);
+                            myCoins++;
+                        }
+                    }
+
+                    for (var i = 0; i < bombs.length; i++) {
+                        if (bombs[i].bottom >= this.y && bombs[i].left <= this.right && bombs[i].right >= this.left ) {
+                            bombs[i].isFunc = false;
+                        if (!shouldInvincible) {
+                            lives -= 1;
+                        }
+                            mySound.play();
+                            if (lives == 0) {
+                                mySound2.play();
+                                this.width += 10
+                                this.height += 10
+                                this.image.src = "images/explosion.png";
+                                setTimeout(stop, 6000);
+                                function stop() {
+                                    var newLevel = 0;
+                                    var newScore = 0;
+                                    if (level > 2) {
+                                        newLevel = 2;
+                                        newScore = 15;
+                                    }
+                                    initGame();
+                                    gameBegun = false;
+                                    level = newLevel;
+                                    myScore = newScore;
+                                }
+                                return true;
+                            }
+                        }
+                    }
+                }
+             }
+
+            class PowerupInvincible {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.width = 80;
+                    this.height = 80;
+                    this.left = this.x;
+                    this.right = this.x + this.width;
+                    this.bottom = this.y + this.height;
+                    this.image = new Image();
+                    this.image.src = "images/invincible.png";
+                }
+                draw(ctx) {
+                    this.y += 2.5;
+                    this.bottom = this.y + this.height;
+                    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+                }
+            }
+            class PowerupHeal {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.width = 50;
+                    this.height = 50;
+                    this.left = this.x;
+                    this.right = this.x + this.width;
+                    this.bottom = this.y + this.height;
+                    this.image = new Image();
+                    this.image.src = "images/heal.png";
+                }
+                draw(ctx) {
+                    this.y += 2;
+                    this.bottom = this.y + this.height;
+                    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+                }
+            }
+            class PowerupInstaFire {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.width = 80;
+                    this.height = 80;
+                    this.left = this.x;
+                    this.right = this.x + this.width;
+                    this.bottom = this.y + this.height;
+                    this.image = new Image();
+                    this.image.src = "images/instaFire.png";
+                }
+                draw(ctx) {
+                    this.y += 2.5;
+                    this.bottom = this.y + this.height;
+                    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+                }
+            }
+            class PowerupScoreDoubler {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.width = 50;
+                    this.height = 50;
+                    this.left = this.x;
+                    this.right = this.x + this.width;
+                    this.bottom = this.y + this.height;
+                    this.image = new Image();
+                    this.image.src = "images/Score_x2.png";
+                }
+                draw(ctx) {
+                    this.y += 2.5;
+                    this.bottom = this.y + this.height;
+                    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+                }
+            }
+
+            class SpaceShip {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.width = 175;
+                    this.height = 50;
+                    this.bottom = this.y + this.height;
+                    this.left = this.x;
+                    this.right = this.x + this.width;
+                    this.isActive = true;
+                    this.fuel = 1000;
+                    this.image = new Image();
+                    this.image.src = "images/spaceship.png";
+
+                }
+                updatePosition() {
+                    if (Math.random() < .95)
+                       return;
+                    var delta = (Math.random() * 60) - 30;
+                    this.x += delta;
+                    if (this.x < 0) {
+                        this.x = 0;
+                    }
+                    if (this.x > canvasWidth - this.width) {
+                        this.x = canvasWidth  - this.width;
+                    }
+                    this.left = this.x;
+                    this.right = this.x + this.width;
+                }
+                draw(ctx) {
+                    if (this.isActive == true) {
+                        ctx.drawImage(this.image,this.x, this.y, this.width, this.height);
+
+                    }
+                }
+                isCollide() {
+                    for (var i = 0; i < bullets.length; i++) {
+                        if (bullets[i].top <= this.bottom && bullets[i].left <= this.right && bullets[i].right >= this.left) {
+                            this.image.src = "images/explosion.png";
+                            bullets[i].isLive = false;
+                            this.width += 10
+                            this.height += 10
+                            myScore += 1;
+                            if (shouldScoreDouble) {
+                                myScore += 1;
+                            }
+                            this.isActive = false;
+                            var dropPowerup = Math.random();
+                            if (dropPowerup >= .9) {
+                                var whichPowerup = Math.random();
+                                if (whichPowerup >= .75) {
+                                    var healer = new PowerupHeal(this.x, this.y);
+                                    healers.push(healer);
+                                }
+                                else if (dropPowerup >= .5) {
+                                    var armour = new PowerupInvincible(this.x, this.y);
+                                    invincible.push(armour);
+                                }
+                                else if (dropPowerup >= .25){
+                                    var quickFire = new PowerupInstaFire(this.x, this.y);
+                                    instaFire.push(quickFire);
+                                }
+                                else {
+                                    var extraScore = new PowerupScoreDoubler(this.x, this.y);
+                                    scoreDoubler.push(extraScore);
+                                }
+                            }
+                            var dropCoin = Math.random();
+                            if (dropCoin >= .65) {
+                                var coin = new Coin(this.x, this.y);
+                                coins.push(coin);
+                            }
+                        }
+                    }
+                }
+            }
+            class SS2 {
+                constructor(x, y, move, imgpath, whichbomb) {
+                    this.x = x;
+                    this.y = y;
+                    this.width = 200;
+                    this.height = 65;
+                    this.bottom = this.y + this.height;
+                    this.left = this.x;
+                    this.right = this.x + this.width;
+                    this.isFlying = true;
+                    this.shouldDrop = Math.round(Math.random() * 200 + 80);
+                    this.countDrop = 0;
+                    this.move = move;
+                    this.bomb = whichbomb;
+                    this.image = new Image();
+                    this.image.src = imgpath;
+               }
+               isCollide() {
+                   for (var i = 0; i < bullets.length; i++) {
+                       if (bullets[i].top <= this.bottom && bullets[i].left <= this.right && bullets[i].right >= this.left) {
+                           bullets[i].isLive = false;
+                           this.isFlying = false;
+                           myScore += 1;
+                           if (shouldScoreDouble) {
+                               myScore += 1;
+                           }
+                           var dropPowerup = Math.random();
+                           if (dropPowerup >= .8) {
+                               var whichPowerup = Math.random();
+                               if (whichPowerup >= .75) {
+                                   var healer = new PowerupHeal(this.x, this.y);
+                                   healers.push(healer);
+                               }
+                               else if (dropPowerup >= .5) {
+                                   var armour = new PowerupInvincible(this.x, this.y);
+                                   invincible.push(armour);
+                               }
+                               else if (dropPowerup >= .25){
+                                   var quickFire = new PowerupInstaFire(this.x, this.y);
+                                   instaFire.push(quickFire);
+                               }
+                               else {
+                                   var extraScore = new PowerupScoreDoubler(this.x, this.y);
+                                   scoreDoubler.push(extraScore);
+                               }
+                           }
+
+                           var dropCoin = Math.random();
+                           if (dropCoin >= .7) {
+                               var coin = new Coin(this.x, this.y);
+                               coins.push(coin);
+                           }
+                       }
+                   }
+               }
+               updatePosition() {
+                   this.x += this.move;
+                   this.left = this.x;
+                   this.right = this.x + this.width;
+                   if (this.countDrop % this.shouldDrop == 0) {
+                       if (this.bomb == true) {
+                           var bomb2 = new B2(this.x, this.y, "images/B2_img.png", 2);
+                           bombs.push(bomb2);
+                           this.shouldDrop = Math.round(Math.random() * 210 + 40);
+                       }
+                       else {
+                           var bomb2 = new B2(this.x, this.y, "images/B2_img copy.png", -2);
+                           bombs.push(bomb2);
+                           this.shouldDrop = Math.round(Math.random() * 210 + 40);
+                       }
+                   }
+               }
+               draw(ctx) {
+                   ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+               }
+           }
+           class SS3 {
+               constructor(x, y) {
+                   this.x = x;
+                   this.y = y;
+                   this.width = 140;
+                   this.height = 160;
+                   this.bottom = this.y + this.height;
+                   this.left = this.x;
+                   this.right = this.x + this.width;
+                   this.isDroping = true;
+                   this.disapear = 750;
+                   this.shouldDrop = Math.round(Math.random() * 200 + 120);
+                   this.countDrop = 0;
+                   this.image = new Image();
+                   this.image.src = "images/SS3.png";
+               }
+               updatePosition() {
+                   if (this.countDrop % this.shouldDrop == 0) {
+                       var bomb = new Bomb(this.x, this.y, 2.25, 20, 30);
+                       bombs.push(bomb);
+                       this.shouldDrop = Math.round(Math.random() * 110 + 40);
+                       var b = new Bomb(this.x + this.width - 10, this.y, 2.25, 20, 30);
+                       bombs.push(b);
+                   }
+                   this.countDrop++;
+                   if (Math.random() < .98) {
+                      return;
+                   }
+                   var delta = (Math.random() * 60) - 30;
+                   this.x += delta;
+                   if (this.x < 0) {
+                       this.x = 0;
+                   }
+                   if (this.x > canvasWidth - this.width) {
+                       this.x = canvasWidth  - this.width;
+                   }
+                   this.left = this.x;
+                   this.right = this.x + this.width;
+               }
+               draw(ctx) {
+                   if (this.isDroping == true) {
+                       ctx.drawImage(this.image,this.x, this.y, this.width, this.height);
+
+                   }
+               }
+               isCollide() {
+                   for (var i = 0; i < bullets.length; i++) {
+                       if (bullets[i].top <= this.bottom && bullets[i].left <= this.right && bullets[i].right >= this.left) {
+                           bullets[i].isLive = false;
+                           myScore += 2;
+                           if (shouldScoreDouble) {
+                               myScore += 1;
+                           }
+                           this.isDroping = false;
+                           var dropPowerup = Math.random();
+                           if (dropPowerup >= .8) {
+                               var whichPowerup = Math.random();
+                               if (whichPowerup >= .75) {
+                                   var healer = new PowerupHeal(this.x, this.y);
+                                   healers.push(healer);
+                               }
+                               else if (dropPowerup >= .5) {
+                                   var armour = new PowerupInvincible(this.x, this.y);
+                                   invincible.push(armour);
+                               }
+                               else if (dropPowerup >= .175){
+                                   var quickFire = new PowerupInstaFire(this.x, this.y);
+                                   instaFire.push(quickFire);
+                               }
+                               else {
+                                   var extraScore = new PowerupScoreDoubler(this.x, this.y);
+                                   scoreDoubler.push(extraScore);
+                               }
+                           }
+                           var dropCoin = Math.random();
+                           if (dropCoin >= .3) {
+                               var coin = new Coin(this.x, this.y);
+                               coins.push(coin);
+                           }
+                       }
+                   }
+               }
+           }
+
+
+             class Bullet {
+                 constructor(x, y) {
+                     this.x = x;
+                     this.y = y;
+                     this.width = 80;
+                     this.height = 75;
+                     this.speed = 25;
+                     this.isLive = true;
+                     this.top = this.y;
+                     this.left = this.x;
+                     this.right = this.x + this.width;
+                     this.image = new Image();
+                     this.image.src = "images/bullet.png";
+                 }
+                 draw(ctx) {
+                     if (this.isLive == true) {
+                         this.y -= this.speed;
+                         this.top = this.y;
+                         if (this.y < 0) {
+                             this.isLive = false;
+                         }
+                         ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+
+                     }
+                 }
+             }
+             class Bomb {
+                 constructor(x, y, fall, width, height) {
+                     this.x = x;
+                     this.y = y;
+                     this.width = width;
+                     this.height = height;
+                     this.isFunc = true;
+                     this.bottom = this.y + this.height;
+                     this.left = this.x;
+                     this.right = this.x + this.width;
+                     this.fall = fall;
+                     this.image = new Image();
+                     this.image.src= "images/alienbomb.png";
+                 }
+                 draw(ctx) {
+                     if (this.isFunc == false) {
+                        return;
+                    }
+                    if (level == 1) {
+                        this.fall = 2.5;
+                    }
+                    this.y += this.fall;
+                    this.bottom = this.y + this.height;
+                    if (this.y + this.height >= canvasHeight) {
+                        this.isFunc = false;
+                    }
+                    //ctx.fillStyle = "darkBlue";
+                    //ctx.fillRect(this.x, this.y, this.width, this.height);
+                    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+                 }
+             }
+             class B2 {
+                 constructor(x, y, bombimg, slant) {
+                     this.x = x;
+                     this.y = y;
+                     this.width = 60;
+                     this.height = 40;
+                     this.isFunc = true;
+                     this.bottom = this.y + this.height;
+                     this.left = this.x;
+                     this.right = this.x + this.width;
+                     this.fall = 2.5;
+                     this.slant = slant;
+                     this.image = new Image();
+                     this.image.src = bombimg;
+                 }
+                 draw(ctx) {
+                     if (this.isFunc == false) {
+                        return;
+                    }
+                    this.y += this.fall;
+                    this.x += this.slant;
+                    this.bottom = this.y + this.height;
+                    this.left = this.x;
+                    this.right = this.x + this.width;
+                    if (this.y + this.height >= canvasHeight) {
+                        this.isFunc = false;
+                    }
+                    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+                 }
+             }
+
+             //Shop things
+             class Coin {
+                 constructor(x, y) {
+                     this.x = x;
+                     this.y = y;
+                     this.width = 100;
+                     this.height = 75;
+                     this.left = this.x;
+                     this.right = this.x + this.width;
+                     this.bottom = this.y + this.height;
+                     this.image = new Image();
+                     this.image.src = "images/coin.png"
+                 }
+                 draw(ctx) {
+                     this.y += 1.75;
+                     this.bottom = this.y + this.height;
+                     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+                 }
+             }
+             class Shop {
+                 constructor() {
+                     this.x = 10;
+                     this.y = canvasHeight - 200;
+                     this.width = 350;
+                     this.height = 150;
+                     this.left = this.x;
+                     this.right = this.x + this.width;
+                 }
+                 draw(ctx) {
+                     ctx.fillStyle = "gray";
+                     ctx.fillRect(this.x, this.y, this.width, this.height);
+                     ctx.fillStyle = "AntiqueWhite";
+                     ctx.font = "30px", "Arial";
+                     ctx.fillText("Shop", 130, canvasHeight - 125);
+                 }
+                 inShop() {
+                     if (turret.left <= this.right) {
+                         inShop = true;
+                         lives = 3;
+                     }
+                 }
+             }
+             function shopScreen(ctx) {
+                 lives = healTo;
+                 ctx.fillStyle = "black";
+                 ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+                 var quickReload = new Image();
+                 quickReload.src = "images/shop_Reload.png"
+                 ctx.drawImage(quickReload, 10, 75, 234, 278);
+
+                 var extraHealth = new Image();
+                 extraHealth.src = "images/extraHealth.png"
+                 ctx.drawImage(extraHealth, 264, 75, 234, 278);
+
+                 var extraPowerup = new Image();
+                 extraPowerup.src = "images/extraPowerup.png"
+                 ctx.drawImage(extraPowerup, 508, 75, 234, 278);
+
+                 ctx.fillStyle = "AntiqueWhite";
+                 ctx.font = "40px Arial";
+                 ctx.fillText("Shop:", 10, 40);
+                 ctx.fillStyle = "red";
+                 ctx.fillText("Click E or swipe up to exit", canvasWidth/5 * 3, 50);
+
+                 if (shouldTick3) {
+                     var tick = new Image();
+                     tick.src = "images/tick.png";
+                     ctx.drawImage(tick, 624, 150, 230, 255.5);
+                 }
+                 if (shouldTick2) {
+                     var tick = new Image();
+                     tick.src = "images/tick.png";
+                     ctx.drawImage(tick, 380, 150, 230, 255.5);
+                 }
+                 if (shouldTick) {
+                     var tick = new Image();
+                     tick.src = "images/tick.png";
+                     ctx.drawImage(tick, 75, 150, 240, 255.5);
+                 }
+             }
+             function buy(event) {
+                 var e = window.event;
+                 var mousex = e.pageX;
+                 var mousey = e.pageY;
+                 if (mousex <= 742 && mousex >= 508 && mousey >= 75 && mousey <= 495 && inShop == true && myCoins >= 8 && powerupTime < 750) {
+                     myCoins -= 8;
+                     powerupTime = 1500;
+                     shouldTick3 = true;
+                 }
+                 if (mousex <= 498 && mousex >= 264 && mousey >= 75 && mousey <= 495 && inShop == true && myCoins >= 8 && healTo < 5) {
+                     myCoins -= 8;
+                     healTo = 5;
+                     lives = 5;
+                     shouldTick2 = true;
+                 }
+                 if (mousex <= 254 && mousex >= 10 && mousey >= 75 && mousey <= 495 && inShop == true && myCoins >= 10 && realReloadTime > 40) {
+                     myCoins -= 10;
+                     reloadTime = 40;
+                     realReloadTime = 40;
+                     shouldTick = true;
+                 }
+             }
+
+             //touch and key pressed functions
+             function checkKey(e) {
+                 e = e || window.event;
+                 if (e.keyCode == '68') {
+                     //right
+                     move = true;
+                     moveDir = true;
+                     setTimeout(function stopMove() {
+                         move = false
+                     }, 50);
+                 }
+                 else if (e.keyCode == '65') {
+                     //left
+                     move = true;
+                     moveDir = false;
+                     setTimeout(function stopMove() {
+                         move = false
+                     }, 50);
+                 }
+                 if (e.keyCode == "69" && inShop == true) {
+                     inShop = false;
+                     level += .5;
+                     myScore = 0;
+                 }
+             }
+             function checkKey(e) {
+                 e = e || window.event;
+                 if (e.keyCode == '39') {
+                     //right
+                     move = true;
+                     moveDir = true;
+                     setTimeout(function stopMove() {
+                         move = false
+                     }, 50);
+                 }
+                 else if (e.keyCode == '37') {
+                     //left
+                     move = true;
+                     moveDir = false;
+                     setTimeout(function stopMove() {
+                         move = false
+                     }, 50);
+                 }
+                 else if (e.keyCode == '32') {
+                     //spacebar
+                     if (gameBegun) {
+                         if (reloadCount <= 0) {
+                             var bullet = new Bullet(turret.x + turret.width/2 - 40, turret.y);
+                             bullets.push(bullet);
+                             fireSound.play();
+                             reloadCount = reloadTime;
+                         }
+                     }
+                     else {
+                         gameBegun = true;
+                     }
+                 }
+                 if (e.keyCode == "69" && inShop == true) {
+                     inShop = false;
+                     level += .5;
+                     myScore = 0;
+                 }
+             }
+             function touchStart(e) {
+                 e = e || window.event;
+                 var touchobj = e.changedTouches[0];
+                 touchStartX = touchobj.pageX;
+                 touchStartY = touchobj.pageY;
+             }
+             function touchEnd(e) {
+                 e = e || window.event;
+                 var touchobj = e.changedTouches[0];
+                 var touchEndX = touchobj.pageX;
+                 var touchEndY = touchobj.pageY;
+                 var touchXChange = touchEndX - touchStartX;
+                 var touchYChange = Math.abs(touchStartY - touchEndY);
+                 if (touchXChange > 30) {
+                     //right
+                     move = true;
+                     moveDir = true;
+                     setTimeout(function stopMove() {
+                         move = false
+                     }, 50);
+                 }
+                 else if (touchXChange < -30) {
+                     //left
+                     move = true;
+                     moveDir = false;
+                     setTimeout(function stopMove() {
+                         move = false
+                     }, 50);
+                 }
+                 else {
+                     //tap
+                     if (reloadCount <= 0) {
+                         var bullet = new Bullet(turret.x + turret.width/2, turret.y);
+                         bullets.push(bullet);
+                         fireSound.play();
+                         reloadCount = reloadTime;
+                     }
+                     else {
+                         mySound.load();
+                         mySound2.load();
+                         fireSound.load();
+                         gameBegun = true;
+                     }
+                 }
+                 if (touchYChange >= 30 && inShop == true) {
+                     inShop = false;
+                     level += .5;
+                     myScore = 0;
+                 }
+             }
+
+             function reloadDraw(ctx) {
+                    ctx.fillStyle = "darkBlue";
+                    ctx.fillRect(25, canvasHeight/2 - 100, 20, 140);
+                    ctx.fillStyle = "lightBlue";
+
+                     if (reloadCount >= 70) {
+                        ctx.fillRect(25, canvasHeight/2 - 100, 20, 140);
+                    }
+                    else if (reloadCount >= 60) {
+                        ctx.fillRect(25, canvasHeight/2 - 100, 20, 120);
+                    }
+                    else if (reloadCount >= 50) {
+                        ctx.fillRect(25, canvasHeight/2 - 100, 20, 100);
+                    }
+                    else if (reloadCount >= 40) {
+                        ctx.fillRect(25, canvasHeight/2 - 100, 20, 80);
+                    }
+                    else if (reloadCount >= 30) {
+                        ctx.fillRect(25, canvasHeight/2 - 100, 20, 60);
+                    }
+                    else if (reloadCount >= 20) {
+                        ctx.fillRect(25, canvasHeight/2 - 100, 20, 40);
+                    }
+                    else if (reloadCount >= 10) {
+                        ctx.fillRect(25, canvasHeight/2 - 100, 20, 20);
+                    }
+                }
+
+             function SSspawn1(ctx) {
+                 if (level == 0 || level == 1) {
+                     if (counter % 300 == 0) {
+                         var spaceShip = new SpaceShip((Math.random() * canvasWidth), (Math.random() * 100));
+                         fleet.push(spaceShip);
+                     }
+                     counter++;
+                 }
+             }
+             function SSspawn2(ctx) {
+                 if (level == 2) {
+                     counter2++;
+                     if (counter2 == nextdestroyercount) {
+                         if (direction) {
+                             var ss2 = new SS2 (0, Math.random() * 120 + 50, 4.5, "images/ss2.png", true);
+                             destroyer.push(ss2);
+                             var x = Math.round(Math.random() * Math.random() * 140 + 120);
+                             nextdestroyercount = counter2 + x;
+                             direction = false;
+                         }
+                         else {
+                             var ss2 = new SS2 (canvasWidth, Math.random() * 120, -4.5, "images/ss2 copy.png", false);
+                             destroyer.push(ss2);
+                             var x = Math.round(Math.random() * 140 + 120);
+                             nextdestroyercount = counter2 + x;
+                             direction = true;
+                         }
+                     }
+                 }
+             }
+             function SSspawn3(ctx) {
+                 if (level == 3) {
+                     counter3++;
+                     if (counter3 == nextdestroyercount2) {
+                         if (whichSS >= .5) {
+                             whichSS = Math.random();
+                             if (direction) {
+                                 var ss2 = new SS2 (0, Math.random() * 120 + 50, 4.5, "images/ss2.png", true);
+                                 destroyer.push(ss2);
+                                 var x = Math.round(Math.random() * Math.random() * 65 + 60);
+                                 nextdestroyercount2 = counter3 + x;
+                                 direction = false;
+                             }
+                             else {
+                                 var ss2 = new SS2 (canvasWidth, Math.random() * 120, -4.5, "images/ss2 copy.png", false);
+                                 destroyer.push(ss2);
+                                 var x = Math.round(Math.random() * 65 + 50);
+                                 nextdestroyercount2 = counter3 + x;
+                                 direction = true;
+                             }
+                         }
+                         else {
+                             whichSS = Math.random();
+                             var spaceShip = new SpaceShip((Math.random() * canvasWidth), (Math.random() * 100));
+                             fleet.push(spaceShip);
+                             var x = Math.round(Math.random() * 65 + 50);
+                             nextdestroyercount2 = counter3 + x;
+                         }
+                     }
+                 }
+             }
+             function SSspawn4(ctx) {
+                 if (level == 4) {
+                     if (countnewbomber == nextnewbomber) {
+                         var ss3 = new SS3 (Math.random() * canvasWidth, Math.random() * 80 + 50);
+                         bombers.push(ss3);
+                         var x = Math.round(Math.random() * Math.random() * 200 + 150);
+                         nextnewbomber = countnewbomber + x;
+                     }
+                     countnewbomber++;
+                 }
+             }
+
+             function powerupTimeDisplay(ctx) {
+                 if (shouldInvincible) {
+                     ctx.fillStyle = "AntiqueWhite";
+                     ctx.font = "25px Arial";
+                     ctx.fillText("Invincible time = " + Math.round(stopInvincible/100), canvasWidth/2 - canvasWidth/8, 50);
+                 }
+                 if (shouldInstaFire) {
+                     ctx.fillStyle = "AntiqueWhite";
+                     ctx.font = "25px Arial";
+                     ctx.fillText("InstaFire time = " + Math.round(stopInstaFire/100), canvasWidth/2 + canvasWidth/8, 50);
+                 }
+                 if (shouldScoreDouble) {
+                     ctx.fillStyle = "AntiqueWhite";
+                     ctx.font = "25px Arial";
+                     ctx.fillText("InstaFire time = " + Math.round(stopScoreDoubler/100), 10, 100);
+                 }
+             }
+
+             function levelPromote() {
+                 if (level == 0 && myScore >= 5) {
+                     level++;
+                     fleet.length = 0;
+                     bombs.length = 0;
+                     myScore = 0;
+                     lives = 3;
+                 }
+                 if (level == 1 && myScore >= 10) {
+                     level++;
+                     fleet.length = 0;
+                     bombs.length = 0;
+                     myScore = 0;
+                     lives = 3;
+                 }
+                 if (level == 2 && myScore >= 15) {
+                     level += .5;
+                     shop = new Shop();
+                     fleet.length = 0;
+                     bombs.length = 0;
+                 }
+                 if (level == 3 && myScore >= 20) {
+                     level++;
+                     fleet.length = 0;
+                     bombs.length = 0;
+                     myScore = 0;
+                     lives = healTo;
+                 }
+                 if (level == 4 && myScore >= 12) {
+                     playerWin = true;
+                     bombs.length = 0;
+                     bombers.length = 0;
+                 }
+             }
+
+             function playerWonScreen(ctx) {
+                 ctx.fillStyle = "black";
+                 ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                 ctx.fillStyle = "green";
+                 ctx.font = "75px Roboto";
+                 ctx.fillText("YOU WIN!", canvasWidth/2 - 100, canvasHeight/2 - 37.5);
+                 setTimeout(function newGame() {
+                     playerWin = false;
+                     gameBegun = false;
+                     initGame();
+                 }, 2000);
+             }
+
+             function initGame() {
+                 whichSS = Math.random();
+                 shouldTick = false;
+                 shouldTick2 = false;
+                 shouldTick3 = false;
+                 nextdestroyercount = 1;
+                 nextdestroyercount2 = 1;
+                 gameBegun = false;
+                 lives = 3;
+                 mySound = new Audio("Sounds/bombSound.mp3");
+                 mySound2 = new Audio("Sounds/finalSound.mov");
+                 fireSound = new Audio("Sounds/fireSound.mov");
+                 fireSound.volume = .3;
+                 myScore = 20;
+                 moveDir = true;
+                 move = false
+                 level = 3;
+                 drop = 300;
+                 powerupTime = 1000;
+                 reloadCount = 0;
+                 reloadTime = 75;
+                 realReloadTime = 75;
+                 shouldInvincible = false;
+                 stopInvincible = 0;
+                 shouldInstaFire = false;
+                 stopInstaFire = 0;
+                 stopScoreDoubler = 0;
+                 shouldScoreDouble = false;
+                 turret = new Turret(canvasWidth/2, canvasHeight - 20);
+                 fleet = [];
+                 destroyer = [];
+                 bombers = [];
+                 bullets = [];
+                 bombs = [];
+                 coins = [];
+                 invincible = [];
+                 instaFire = [];
+                 healers = [];
+                 scoreDoubler = [];
+                 healTo = 3;
+                 counter = 0;
+                 counter2 = 0;
+                 counter3 = 0;
+                 countnewbomber = 0;
+                 nextnewbomber = 0;
+                 direction = true;
+                 myCoins = 0;
+             }
+
+             function startGame() {
+                 console.log("game started")
+                 var c = document.getElementById("myCanvas");
+                 var ctx = c.getContext("2d");
+                 c.width = window.innerWidth - 50;
+                 c.height = window.innerHeight - 75;
+                 canvasWidth = c.width;
+                 canvasHeight = c.height;
+                 initGame();
+                 ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                 ctx.fillStyle = "black";
+                 ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                 setInterval(function () {
+                    if (!gameBegun){
+                        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                        ctx.fillStyle = "black";
+                        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                        ctx.fillStyle = "AntiqueWhite";
+                        ctx.font = "40px Arial"
+                        ctx.fillText("Press space or tap to start/resume from last checkpoint", canvasWidth/2 - 400, canvasHeight/2 - 50);
+                        return;
+                    }
+
+                    if (lives == 0 ) {
+                        turret.draw(ctx);
+                        return;
+                    }
+                    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                    ctx.fillStyle = "black";
+                    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                    reloadDraw(ctx);
+
+                    for (var i = 0; i < fleet.length; i++) {
+                        fleet[i].updatePosition();
+                        fleet[i].isCollide();
+                    }
+                    if (move) {
+                        if (moveDir) {
+                            turret.moveRight(5);
+                        }
+                        else {
+                            turret.moveLeft(5);
+                        }
+                    }
+                    turret.draw(ctx);
+                    for (var i = 0; i < destroyer.length; i++) {
+                        if (destroyer[i].isFlying == false) {
+                            destroyer.splice(i, 1);
+                        }
+                    }
+                    for (var i = 0; i < destroyer.length; i++) {
+                        if (destroyer[i].isFlying == true) {
+                            destroyer[i].isCollide();
+                            destroyer[i].updatePosition();
+                            destroyer[i].countDrop++;
+                        }
+                    }
+
+                    powerupTimeDisplay(ctx);
+                    if (playerWin) {
+                        playerWonScreen(ctx);
+                    }
+
+                    for (var i = 0; i < invincible.length; i++) {
+                        invincible[i].draw(ctx);
+                        if (invincible[i].bottom >= canvasHeight) {
+                            invincible.splice(i, 1);
+                        }
+                    }
+                    if (stopInvincible <= 0) {
+                        shouldInvincible = false;
+                    }
+                    for (var i = 0; i < healers.length; i++) {
+                        healers[i].draw(ctx);
+                        if (healers[i].bottom >= canvasHeight) {
+                            healers.splice(i, 1);
+                        }
+                    }
+                    for (var i = 0; i < instaFire.length; i++) {
+                        instaFire[i].draw(ctx);
+                        if (instaFire[i].bottom >= canvasHeight) {
+                            instaFire.splice(i, 1);
+                        }
+                    }
+                    for (var i = 0; i < scoreDoubler.length; i++) {
+                        scoreDoubler[i].draw(ctx);
+                        if (scoreDoubler[i].bottom >= canvasHeight) {
+                            scoreDoubler.splice(i, 1);
+                        }
+                    }
+                    if (stopScoreDoubler <= 0) {
+                        shouldScoreDouble = false;
+                    }
+                    if (stopInstaFire <= 0) {
+                        shouldInstaFire = false;
+                        reloadTime = realReloadTime;
+                    }
+                    for (var i = 0; i < coins.length; i++) {
+                        coins[i].draw(ctx);
+                        if (coins[i].bottom >= canvasHeight) {
+                            coins.splice(i, 1);
+                        }
+                    }
+
+                    for (var i = 0; i < destroyer.length; i++) {
+                        if (destroyer[i].isFlying == true) {
+                            destroyer[i].draw(ctx);
+                        }
+                    }
+                    for (var i = 0; i < bombers.length; i++) {
+                        bombers[i].draw(ctx);
+                        bombers[i].updatePosition();
+                        bombers[i].isCollide();
+                        if (bombers[i].isDroping == false) {
+                            bombers.splice(i, 1);
+                        }
+                    }
+
+                    for (var i = 0; i < bullets.length; i++) {
+                        if (bullets[i].isLive == false) {
+                            bullets.splice(i, 1);
+                        }
+                    }
+                    for (var i = 0; i < bullets.length; i++) {
+                        bullets[i].draw(ctx);
+                    }
+
+                    for (var i = 0; i < fleet.length; i++) {
+                        if (fleet[i].isActive == false) {
+                            fleet.splice(i, 1);
+                        }
+                    }
+                    for (var i = 0; i < bombs.length; i++) {
+                        if (bombs[i].isFunc == false) {
+                            bombs.splice(i, 1);
+                        }
+                    }
+                    if (level == 1) {
+                        drop = 180;
+                    }
+
+                    for (var i = 0; i < fleet.length; i++) {
+                        if (fleet[i].fuel % drop == 0 ) {
+                            var bomb = new Bomb(fleet[i].x + 30, fleet[i].y + fleet[i].height, 1.75, 40, 60);
+                            bombs.push(bomb);
+                        }
+                    }
+                    for (var i = 0; i < fleet.length; i++) {
+                        fleet[i].draw(ctx);
+                    }
+
+                    for (var i = 0; i < bombs.length; i++) {
+                        bombs[i].draw(ctx);
+                    }
+
+                    levelPromote();
+
+                    if (turret.isCollide()) {
+                        turret.draw(ctx);
+                        ctx.fillStyle = "white"
+                        ctx.font = "50px Arial";
+                        ctx.fillText("GAME OVER", canvasWidth/2 - 100, canvasHeight/2)
+                    }
+                    ctx.font = "30px Arial";
+                    ctx.fillStyle = "lightGreen";
+                    ctx.fillText("Score = " + myScore, 10, 50);
+                    ctx.fillText("Lives = " + lives, canvasWidth -200, 50);
+                    ctx.fillText("Level = " + level, canvasWidth / 2, 50);
+
+                    if (level == 2.5) {
+                        shop.draw(ctx);
+                        shop.inShop();
+                    }
+
+                    for (var i = 0; i < fleet.length; i++) {
+                        fleet[i].fuel -= 1;
+                        if (fleet[i].fuel == 0) {
+                            fleet[i].isActive = false;
+                        }
+                    }
+                    for (var i = 0; i < bombers.length; i++) {
+                        bombers[i].disapear -= 1;
+                        if (bombers[i].disapear == 0) {
+                            bombers[i].isDroping = false;
+                        }
+                    }
+
+                    SSspawn1(ctx);
+                    SSspawn2(ctx);
+                    SSspawn3(ctx);
+                    SSspawn4(ctx);
+
+                    if (inShop) {
+                        shopScreen(ctx);
+                    }
+
+                    ctx.fillStyle = "lightGreen";
+                    ctx.font = "30px Arial";
+                    ctx.fillText("Coins: " + myCoins, canvasWidth/4, 50);
+
+                    reloadCount -= 1;
+                    stopInvincible -= 1;
+                    stopInstaFire -= 1;
+                    stopScoreDoubler -= 1;
+                }, 1);
+                document.onkeydown = checkKey;
+                document.ontouchstart = touchStart;
+                document.ontouchend = touchEnd;
+            }
+
+        </script>
+    </head>
+    <body onload = "startGame()">
+        <canvas id = "myCanvas" width = "1200" height = "965" style = "border: 3px solid #090909;">
+        </canvas>
+    </body>
+</html>
