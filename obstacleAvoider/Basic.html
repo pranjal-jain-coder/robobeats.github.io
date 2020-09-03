@@ -56,11 +56,11 @@
             }
         }
         class Obstacle {
-            constructor(x, y, asteroid) {
+            constructor(x, y, asteroid, width, height) {
                 this.y = y;
                 this.x = x;
-                this.width = 40;
-                this.height = 52;
+                this.width = Math.random() * 100 + 10;
+                this.height = this.width + Math.random() * 12 || this.width - Math.random() * 12;
                 this.isAlive = true;
                 this.top = this.y;
                 this.bottom = this.y + this.height;
@@ -123,34 +123,17 @@
                 distance = 1;
             }
         }
-        function touchStart(e) {
-            e = e || window.event;
-            var touchobj = e.changedTouches[0];
-            touchStartX = touchobj.pageX;
-            touchStartY = touchobj.pageY;
-        }
-        function touchEnd(e) {
-            e = e || window.event;
-            var touchobj = e.changedTouches[0];
-            var touchEndX = touchobj.pageX;
-            var touchEndY = touchobj.pageY;
-            var touchXChange = touchEndX - touchStartX;
-            var touchYChange = touchStartY - touchEndY;
-            if (touchYChange <= -30) {
-                //down
-                move = true;
-                moveDir = false;
-                setTimeout(function stopMove() {
-                    move = false
-                }, 300);
+        function touchEnd(event) {
+            var y = event.touches[0].clientY;
+            if (y > canvasHeight/2) {
+                runner.y += 20;
+                runner.top = runner.y;
+                runner.bottom = runner.y + runner.heightl;
             }
-            if (touchYChange >= 30) {
-                //up
-                move = true;
-                moveDir = true;
-                setTimeout(function stopMove() {
-                    move = false
-                }, 300);
+            else {
+                runner.y -= 20;
+                runner.top = runner.y;
+                runner.bottom = runner.y + runner.heightl;
             }
         }
 
@@ -221,7 +204,6 @@
                 newObsCoun -= 2;
 
                 document.onkeydown = checkKey;
-                document.ontouchstart = touchStart;
                 document.ontouchend = touchEnd;
                 document.onkeyup = normalDistance;
             }, 4)
