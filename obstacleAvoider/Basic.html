@@ -126,12 +126,12 @@
         function touchEnd(event) {
             var y = event.touches[0].clientY;
             if (y > canvasHeight/2) {
-                runner.y += 20;
+                runner.y += 80;
                 runner.top = runner.y;
                 runner.bottom = runner.y + runner.heightl;
             }
             else {
-                runner.y -= 20;
+                runner.y -= 80;
                 runner.top = runner.y;
                 runner.bottom = runner.y + runner.heightl;
             }
