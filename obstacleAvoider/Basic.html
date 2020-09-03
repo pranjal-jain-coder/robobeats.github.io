@@ -123,15 +123,15 @@
                 distance = 1;
             }
         }
-        function touchEnd(event) {
+        function touch(event) {
             var y = event.touches[0].clientY;
             if (y > canvasHeight/2) {
-                runner.y += 200;
+                runner.y += 20;
                 runner.top = runner.y;
                 runner.bottom = runner.y + runner.heightl;
             }
             else {
-                runner.y -= 200;
+                runner.y -= 20;
                 runner.top = runner.y;
                 runner.bottom = runner.y + runner.heightl;
             }
@@ -204,7 +204,7 @@
                 newObsCoun -= 2;
 
                 document.onkeydown = checkKey;
-                document.ontouchstart = touchEnd;
+                document.ontouchmove = touch;
                 document.onkeyup = normalDistance;
             }, 4)
         }
