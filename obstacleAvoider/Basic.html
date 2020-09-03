@@ -10,6 +10,7 @@
         var newObsSpeed;
         var runnerObsCol;
         var gameBegun;
+        var distance;
 
         class Runner {
             constructor() {
@@ -39,12 +40,12 @@
             changeY() {
                 if(move) {
                     if (!moveDir) {
-                        this.y++;
+                        this.y += distance;
                         if (this.y > canvasHeight - this.height) {
                             this.y = canvasHeight - this.height;
                         }
                     } else {
-                        this.y--;
+                        this.y -= distance;
                         if (this.y < 0) {
                             this.y = 0;
                         }
@@ -96,6 +97,31 @@
                     move = false
                 }, 300);
             }
+            if (e.keyCode == '38') {
+                //up
+                move = true;
+                moveDir = true;
+                setTimeout(function stopMove() {
+                    move = false
+                }, 300);
+            }
+            else if (e.keyCode == '40') {
+                //down
+                move = true;
+                moveDir = false;
+                setTimeout(function stopMove() {
+                    move = false
+                }, 300);
+            }
+            if (e.keyCode == '16') {
+                distance = 2;
+            }
+        }
+        function normalDistance(e) {
+            e = e || window.event;
+            if (e.keyCode == '16') {
+                distance = 1;
+            }
         }
         function touchStart(e) {
             e = e || window.event;
@@ -137,6 +163,7 @@
             newObsSpeed = 300;
             runnerObsCol = false;
             gameBegun = true;
+            distance = 1;
         }
         function startGame() {
             var c = document.getElementById("myCanvas");
@@ -176,13 +203,13 @@
                 if (newObsCoun <= 0) {
                     var imgPicker = Math.random();
                     if (imgPicker <= .3) {
-                        var obs = new Obstacle(canvasWidth, Math.random() * canvasHeight - 200, "images/asteroid1.png");
+                        var obs = new Obstacle(canvasWidth, Math.random() * canvasHeight, "images/asteroid1.png");
                     }
                     else if (imgPicker >= .6) {
-                        var obs = new Obstacle(canvasWidth, Math.random() * canvasHeight - 200, "images/asteroid2.png");
+                        var obs = new Obstacle(canvasWidth, Math.random() * canvasHeight, "images/asteroid2.png");
                     }
                     else {
-                        var obs = new Obstacle(canvasWidth, Math.random() * canvasHeight - 200, "images/asteroid3.png");
+                        var obs = new Obstacle(canvasWidth, Math.random() * canvasHeight, "images/asteroid3.png");
                     }
                     obstacle.push(obs);
                     newObsCoun = Math.random() * newObsSpeed + 50;
@@ -191,11 +218,12 @@
                 for (var i = 0; i < obstacle.length; i++) {
                     obstacle[i].draw(ctx);
                 }
-                newObsCoun -= 3;
+                newObsCoun -= 2;
 
                 document.onkeydown = checkKey;
                 document.ontouchstart = touchStart;
                 document.ontouchend = touchEnd;
+                document.onkeyup = normalDistance;
             }, 4)
         }
         </script>
