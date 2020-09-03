@@ -6,3 +6,6 @@ You are chased into a asteroid field by a group of assassins. The asteroids prob
 
 ## Lane Game
 This is cool game where you have to dodge incoming vehicals. Click [here](Lane_Game/laneGame) to play.
+
+Checkout my blog: www.pranjalsworld.wordpress.com
+Checkout my youtube channel: www.youtube.com/channel/UC03WEKrrGTdRYYJ7cbwtkNA?view_as=subscriber
