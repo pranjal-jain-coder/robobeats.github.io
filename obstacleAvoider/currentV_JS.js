@@ -276,9 +276,13 @@ function startGame() {
         if (shieldActive) {
             reloadDraw(ctx);
             shieldActiveTime -= 1;
+            runner.image.src = "images/runnerShielded.png";
+            runner.width = 140;
+            runner.height = 86;
             if (shieldActiveTime <= 0) {
                 shieldActive = false;
                 shieldCount = 0;
+                runner.image.src = "images/runner.png";
             }
         }
         newObsCoun -= 2;
