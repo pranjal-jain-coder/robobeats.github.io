@@ -11,6 +11,7 @@ var shieldActive;
 var shieldCount;
 var shieldActiveTime;
 var asteroidSmashed;
+var myScore;
 
 class Runner {
     constructor() {
@@ -34,6 +35,7 @@ class Runner {
             if (obstacle[i].bottom >= runner.top && obstacle[i].top <= runner.bottom && obstacle[i].left <= runner.right && obstacle[i].right >= runner.left) {
                 obstacle.splice(i, 1);
                 asteroidSmashed++;
+                myScore += 2;
                 if (!shieldActive) {
                   gameBegun = false;
                 }
@@ -103,9 +105,9 @@ function checkKey(e) {
     if (e.keyCode == '16') {
         distance = 2.2;
     }
-    if (e.keyCode == '32' && !shieldActive && shieldCount >= 2500) {
+    if (e.keyCode == '83' && !shieldActive && shieldCount >= 2500) {
         shieldActive = true;
-        shieldActiveTime = 4000;
+        shieldActiveTime = 2500;
     }
 }
 function normalDistance(e) {
@@ -130,28 +132,10 @@ function touch(event) {
 
 function reloadDraw(ctx) {
        ctx.fillStyle = "darkBlue";
-       ctx.fillRect(25, canvasHeight/2 - 100, 20, 380);
+       ctx.fillRect(25, canvasHeight/2 - 100, 20, 200);
        ctx.fillStyle = "lightBlue";
 
-       if (shieldActiveTime >= 3875) {
-           ctx.fillRect(25, canvasHeight/2 - 100, 20, 320);
-       }
-       else if (shieldActiveTime >= 3750) {
-           ctx.fillRect(25, canvasHeight/2 - 100, 20, 300);
-       }
-       else if (shieldActiveTime >= 3500) {
-           ctx.fillRect(25, canvasHeight/2 - 100, 20, 280);
-       }
-       else if (shieldActiveTime >= 3250) {
-           ctx.fillRect(25, canvasHeight/2 - 100, 20, 260);
-       }
-       else if (shieldActiveTime >= 3000) {
-           ctx.fillRect(25, canvasHeight/2 - 100, 20, 240);
-       }
-       else if (shieldActiveTime >= 2750) {
-           ctx.fillRect(25, canvasHeight/2 - 100, 20, 220);
-       }
-       else if (shieldActiveTime >= 2500) {
+       if (shieldActiveTime >= 2375) {
            ctx.fillRect(25, canvasHeight/2 - 100, 20, 200);
        }
        else if (shieldActiveTime >= 2250) {
@@ -197,6 +181,7 @@ function initGame() {
     shieldCount = 2500;
     shieldActiveTime = 1;
     asteroidSmashed = 0;
+    myScore = 0;
 }
 function startGame() {
     var c = document.getElementById("myCanvas");
@@ -247,12 +232,14 @@ function startGame() {
         for (var i = 0; i < obstacle.length; i++) {
             if (obstacle[i].x <= 0) {
                 obstacle.splice(i, 1);
+                myScore++;
             }
         }
 
         ctx.font = "30px Arial";
         ctx.fillStyle = "lightGreen";
         ctx.fillText("Asteroids Smashed = " + asteroidSmashed, 10, 50);
+        ctx.fillText("Score = " + myScore, canvasWidth - 200, 50);
 
         if (newObsCoun <= 0) {
             var imgPicker = Math.random();
@@ -277,11 +264,13 @@ function startGame() {
             reloadDraw(ctx);
             shieldActiveTime -= 1;
             runner.image.src = "images/runnerShielded.png";
-            runner.width = 140;
-            runner.height = 86;
+            runner.width = 192;
+            runner.height = 114;
             if (shieldActiveTime <= 0) {
                 shieldActive = false;
                 shieldCount = 0;
+                runner.width = 140;
+                runner.height = 86;
                 runner.image.src = "images/runner.png";
             }
         }
