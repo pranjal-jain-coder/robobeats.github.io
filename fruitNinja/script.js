@@ -33,8 +33,6 @@ class Melon {
     ];
   }
   draw(ctx) {
-    ctx.fillStyle = "aqua";
-    ctx.fillRect(this.x, this.y, this.width, this.height);
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
     this.width += 1.25/fruitVelocity;
     this.height += 1/fruitVelocity;
@@ -121,10 +119,6 @@ function startGame(event) {
     var background = new Image;
     background.src = "images/background.jpg";
     ctx.drawImage(background, 0, 0, canvasWidth, canvasHeight);
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(canvasWidth, canvasHeight);
-    ctx.stroke();
 
     handleSlash(new Point(0, 0), new Point(canvasWidth, canvasHeight), ctx);
 
