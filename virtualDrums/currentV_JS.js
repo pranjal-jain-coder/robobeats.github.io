@@ -56,9 +56,9 @@ function initGame() {
     drumSet = [new Drums(300, 160, "crash"),
     new Drums(760, 130, "ride"),
     new Drums(750, 300, "floorTom")]
-    crashSound = new sound("./Sounds/crashSound.mp3");
-    floorTomSound = new sound("./Sounds/floorTom.mp3");
-    rideSound = new sound("./Sounds/rideSound.mp3");
+    crashSound = new sound("./Sounds/crash.mov");
+    floorTomSound = new sound("./Sounds/floorTom.mov");
+    rideSound = new sound("./Sounds/ride.mov");
 }
 function startGame() {
     let c = document.getElementById("myCanvas");
