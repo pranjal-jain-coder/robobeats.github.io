@@ -40,12 +40,15 @@ document.body.onmousedown = function() {
     for (var i = 0; i < drumSet.length; i++) {
         if (drumSet[i].x <= mouseX && drumSet[i].right >= mouseX && drumSet[i].y <= mouseY && drumSet[i].bottom >= mouseY) {
             if (drumSet[i].type === "ride") {
+                rideSound.restart();
                 rideSound.play();
             }
             if (drumSet[i].type === "crash") {
+                crashSound.restart();
                 crashSound.play();
             }
             if (drumSet[i].type === "floorTom") {
+                floorTomSound.restart();
                 floorTomSound.play();
             }
         }
