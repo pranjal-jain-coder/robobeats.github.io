@@ -79,11 +79,16 @@ function initGame() {
       new Drums(300, 300, "hiHat")
     ]
     crashSound = new sound("./Sounds/crash.mov");
+    crashSound.sound.volume = .1;
     floorTomSound = new sound("./Sounds/floorTom.mov");
+    floorTomSound.sound.volume = .3;
     rideSound = new sound("./Sounds/ride.mov");
+    rideSound.sound.volume = .3;
     hiHatSound = new sound("./Sounds/hiHat.mov");
+    hiHatSound.sound.volume = .3;
     bassDrumSound = new sound("./Sounds/bassDrum.mov");
     snareSound = new sound("./Sounds/snare.mov");
+    snareSound.sound.volume = .3;
 }
 function startGame() {
     let c = document.getElementById("myCanvas");
