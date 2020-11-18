@@ -1,7 +1,9 @@
 let drumSet;
+let rideSound;
 let crashSound;
 let floorTomSound;
-let rideSound;
+let hiHatSound;
+let bassDrumSound;
 
 function sound(src) {
   this.sound = document.createElement("audio");
@@ -13,8 +15,8 @@ function sound(src) {
   this.play = function(){
     this.sound.play();
   }
-  this.stop = function(){
-    this.sound.pause();
+  this.restart = function(){
+    this.sound.currentTime = 0;
   }
 }
 class Drums {
@@ -51,17 +53,37 @@ document.body.onmousedown = function() {
                 floorTomSound.restart();
                 floorTomSound.play();
             }
+            if (drumSet[i].type === "hiHat") {
+                hiHatSound.restart();
+                hiHatSound.play();
+            }
+            if (drumSet[i].type === "snare") {
+                snareSound.restart();
+                snareSound.play();
+            }
+            if (drumSet[i].type === "bassDrum") {
+                bassDrumSound.restart();
+                bassDrumSound.play();
+            }
         }
     }
 }
 
 function initGame() {
-    drumSet = [new Drums(300, 160, "crash"),
-    new Drums(760, 130, "ride"),
-    new Drums(750, 300, "floorTom")]
+    drumSet = [
+      new Drums(500, 350, "bassDrum"),
+      new Drums(420, 350, "snare"),
+      new Drums(300, 170, "crash"),
+      new Drums(730, 140, "ride"),
+      new Drums(760, 300, "floorTom"),
+      new Drums(300, 300, "hiHat")
+    ]
     crashSound = new sound("./Sounds/crash.mov");
     floorTomSound = new sound("./Sounds/floorTom.mov");
     rideSound = new sound("./Sounds/ride.mov");
+    hiHatSound = new sound("./Sounds/hiHat.mov");
+    bassDrumSound = new sound("./Sounds/bassDrum.mov");
+    snareSound = new sound("./Sounds/snare.mov");
 }
 function startGame() {
     let c = document.getElementById("myCanvas");
